@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -54,21 +54,18 @@ export default function Login(props) {
   const _validAuthStates = ["signIn", "signedOut"];
 
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [inputs, setInputs] = useState({});
   const [error, setError] = useState("");
 
   async function signIn() {
-    setUsername(inputs.username);
-    setPassword(inputs.password);
     try {
-      await Auth.signIn(username, password);
-      this.props.onStateChange("signedIn", {});
+      await Auth.signIn(inputs.username, inputs.password);
+      props.onStateChange("signedIn", {});
     } catch (err) {
       if (err.code === "UserNotConfirmedException") {
-        this.props.updateUsername(username);
+        props.updateUsername(username);
         await Auth.resendSignUp(username);
-        this.props.onStateChange("confirmSignUp", {});
+        props.onStateChange("confirmSignUp", {});
       } else if (err.code === "NotAuthorizedException") {
         // The error happens when the incorrect password is provided
         setError("Login failed." );
@@ -83,6 +80,7 @@ export default function Login(props) {
   }
 
   function handleInputChange(evt) {
+    console.log(inputs)
     setInputs(inputs || {});
     const { name, value, type, checked } = evt.target;
     const check_type = ["radio", "checkbox"].includes(type);
@@ -95,11 +93,9 @@ export default function Login(props) {
     evt.preventDefault();
     signIn();
   }
-
-  return (
-    <Grid container component="main" className={classes.root}>
-      {!_validAuthStates.includes(props.authState) && (
-        <>
+  if (_validAuthStates.includes(props.authState)) {
+    return (
+      <Grid container component="main" className={classes.root}>
           <CssBaseline />
           <Grid item xs={false} sm={4} md={7} className={classes.image} />
           <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
@@ -110,7 +106,7 @@ export default function Login(props) {
               <Typography component="h1" variant="h5">
                 Sign in
           </Typography>
-              <form className={classes.form} noValidate>
+              <form className={classes.form} noValidate onSubmit={handleFormSubmission}>
                 <TextField
                   variant="outlined"
                   margin="normal"
@@ -121,6 +117,7 @@ export default function Login(props) {
                   name="username"
                   autoComplete="username"
                   autoFocus
+                  onChange={handleInputChange}
                 />
                 <TextField
                   variant="outlined"
@@ -132,6 +129,7 @@ export default function Login(props) {
                   type="password"
                   id="password"
                   autoComplete="current-password"
+                  onChange={handleInputChange}
                 />
                 <FormControlLabel
                   control={<Checkbox value="remember" color="primary" />}
@@ -159,10 +157,11 @@ export default function Login(props) {
               </form>
             </div>
           </Grid>
-        </>
-      )}
-    </Grid>
-  );
+      </Grid>
+    );
+        } else {
+          return null;
+        }
 }
 
 /* <div className="mx-auto w-full max-w-xs">
