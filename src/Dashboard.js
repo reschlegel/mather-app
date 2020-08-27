@@ -20,12 +20,27 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { Copyright, mainListItems, secondaryListItems } from './function';
 import { Auth } from "aws-amplify";
+import ConstructionImage from './img/under-construction.png'
+import ToolbarImage from './img/toolbar-logo.png'
 
 const drawerWidth = 240;
+
+const toolbarRelativeProperties = (property, modifier = value => value) => theme =>
+  Object.keys(theme.mixins.toolbar).reduce((style, key) => {
+    const value = theme.mixins.toolbar[key];
+    if (key === 'minHeight') {
+      return { ...style, [property]: modifier(value) };
+    }
+    if (value.minHeight !== undefined) {
+      return { ...style, [key]: { [property]: modifier(value.minHeight) } };
+    }
+    return style;
+  }, {});
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
+    height: toolbarRelativeProperties('height', value => `calc(100% - ${value}px)`)(theme),
   },
   toolbar: {
     paddingRight: 24, // keep right padding when drawer closed
@@ -97,9 +112,13 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'auto',
     flexDirection: 'column',
   },
-  fixedHeight: {
-    height: 240,
-  },
+  construction: {
+    backgroundImage: `url(${ConstructionImage})`,
+    backgroundRepeat: 'no-repeat',
+    backgroundColor: 'transparent',
+    backgroundPosition: 'center',
+    height: 512
+  }
 }));
 
 export default function Dashboard(props) {
@@ -111,7 +130,9 @@ export default function Dashboard(props) {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+  const constructionPaper = clsx(classes.paper, classes.construction);
+
+  console.log(classes)
 
   async function signOut() {
     try {
@@ -138,7 +159,8 @@ export default function Dashboard(props) {
               <MenuIcon />
             </IconButton>
             <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-              Dashboard
+              {/* <img src={ToolbarImage} alt="logo" /> */}
+              LISTENER&trade; DASH
             </Typography>
             <IconButton 
               color="inherit"
@@ -174,22 +196,11 @@ export default function Dashboard(props) {
           <Container maxWidth="lg" className={classes.container}>
             <Grid container spacing={3}>
               {/* Chart */}
-              <Grid item xs={12} md={8} lg={9}>
-                <Paper className={fixedHeightPaper}>
-                  {/* <Chart /> */}
-                </Paper>
-              </Grid>
-              {/* Recent Deposits */}
-              <Grid item xs={12} md={4} lg={3}>
-                <Paper className={fixedHeightPaper}>
-                  {/* <Deposits /> */}
-                </Paper>
-              </Grid>
-              {/* Recent Orders */}
               <Grid item xs={12}>
-                <Paper className={classes.paper}>
-                  {/* <Orders /> */}
-                </Paper>
+                <Paper className={constructionPaper} elevation={0} />
+                <Typography component="h1" variant="h6" color="inherit">
+                  UNDER CONSTRUCTION
+                </Typography>
               </Grid>
             </Grid>
             <Box pt={4}>
