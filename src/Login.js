@@ -12,21 +12,10 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-
+import { Copyright } from './function.js';
+import { Auth } from "aws-amplify";
 import BGImage from './img/bg-image.jpg'
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
-      <Link color="inherit" href="https://mathereconomics.com/">
-        Mather Economics
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -59,86 +48,165 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Login() {
+export default function Login(props) {
   const classes = useStyles();
 
-  // const [username, setUsername] = useState("");
-  // const [password, setPassword] = useState("");
+  const _validAuthStates = ["signIn", "signedOut"];
 
-  // function handleSubmit(event) {
-  //   async function handleSubmit(event) {
-  //     event.preventDefault();
-    
-  //     try {
-  //       await Auth.signIn(email, password);
-  //       alert("Logged in");
-  //     } catch (e) {
-  //       alert(e.message);
-  //     }
-  //   }    
-  // }
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [inputs, setInputs] = useState({});
+  const [error, setError] = useState("");
+
+  async function signIn() {
+    setUsername(inputs.username);
+    setPassword(inputs.password);
+    try {
+      await Auth.signIn(username, password);
+      this.props.onStateChange("signedIn", {});
+    } catch (err) {
+      if (err.code === "UserNotConfirmedException") {
+        this.props.updateUsername(username);
+        await Auth.resendSignUp(username);
+        this.props.onStateChange("confirmSignUp", {});
+      } else if (err.code === "NotAuthorizedException") {
+        // The error happens when the incorrect password is provided
+        setError("Login failed." );
+      } else if (err.code === "UserNotFoundException") {
+        // The error happens when the supplied username/email does not exist in the Cognito user pool
+        setError("Login failed.");
+      } else {
+        setError("An error has occurred.");
+        console.error(err);
+      }
+    }
+  }
+
+  function handleInputChange(evt) {
+    setInputs(inputs || {});
+    const { name, value, type, checked } = evt.target;
+    const check_type = ["radio", "checkbox"].includes(type);
+    inputs[name] = check_type ? checked : value;
+    inputs["checkedValue"] = check_type ? value : null;
+    setError("");
+  }
+
+  function handleFormSubmission(evt) {
+    evt.preventDefault();
+    signIn();
+  }
 
   return (
     <Grid container component="main" className={classes.root}>
-      <CssBaseline />
-      <Grid item xs={false} sm={4} md={7} className={classes.image} />
-      <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
-        <div className={classes.paper}>
-          <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign in
+      {!_validAuthStates.includes(props.authState) && (
+        <>
+          <CssBaseline />
+          <Grid item xs={false} sm={4} md={7} className={classes.image} />
+          <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+            <div className={classes.paper}>
+              <Avatar className={classes.avatar}>
+                <LockOutlinedIcon />
+              </Avatar>
+              <Typography component="h1" variant="h5">
+                Sign in
           </Typography>
-          <form className={classes.form} noValidate>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-            />
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              className={classes.submit}
-            >
-              Sign In
+              <form className={classes.form} noValidate>
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  autoComplete="username"
+                  autoFocus
+                />
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                />
+                <FormControlLabel
+                  control={<Checkbox value="remember" color="primary" />}
+                  label="Remember me"
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  className={classes.submit}
+                >
+                  Sign In
             </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  Forgot password?
+                <Grid container>
+                  <Grid item xs>
+                    <Link href="#" variant="body2">
+                      Forgot password?
                 </Link>
-              </Grid>
-            </Grid>
-            <Box mt={5}>
-              <Copyright />
-            </Box>
-          </form>
-        </div>
-      </Grid>
+                  </Grid>
+                </Grid>
+                <Box mt={5}>
+                  <Copyright />
+                </Box>
+              </form>
+            </div>
+          </Grid>
+        </>
+      )}
     </Grid>
   );
 }
+
+/* <div className="mx-auto w-full max-w-xs">
+        <div className="login-form">
+          {this._validAuthStates.includes(this.props.authState) && (
+            <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" onSubmit={this.handleFormSubmission}>
+              <div className="mb-4">
+                <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="username">
+                  Username
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker leading-tight focus:outline-none focus:shadow-outline"
+                  id="username"
+                  key="username"
+                  name="username"
+                  onChange={this.handleInputChange}
+                  type="text"
+                  placeholder="Username"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-grey-darker text-sm font-bold mb-2" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                  id="password"
+                  key="password"
+                  name="password"
+                  onChange={this.handleInputChange}
+                  type="password"
+                  placeholder="******************"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <button
+                  className="bg-indigo-400 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  type="submit"
+                  onClick={this.handleFormSubmission}
+                >
+                  Login
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div> */
