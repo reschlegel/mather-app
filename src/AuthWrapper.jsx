@@ -18,11 +18,11 @@ class AuthWrapper extends Component {
   render() {
     return (
       <div className="flex-1">
-          <Login
-            authState={this.props.authState}
-            updateUsername={this.updateUsername}
-            onStateChange={this.props.onStateChange}
-          />
+        <Login
+          authState={this.props.authState}
+          updateUsername={this.updateUsername}
+          onStateChange={this.props.onStateChange}
+        />
         <Dashboard authState={this.props.authState} onStateChange={this.props.onStateChange} />
       </div>
     );

@@ -132,8 +132,6 @@ export default function Dashboard(props) {
   };
   const constructionPaper = clsx(classes.paper, classes.construction);
 
-  console.log(classes)
-
   async function signOut() {
     try {
       await Auth.signOut();
