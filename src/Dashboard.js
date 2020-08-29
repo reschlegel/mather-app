@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -10,18 +10,28 @@ import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
-import Badge from '@material-ui/core/Badge';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
+import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import CodeIcon from "@material-ui/icons/Code";
+import ListItemText from '@material-ui/core/ListItemText'
 import Paper from '@material-ui/core/Paper';
 import MenuIcon from '@material-ui/icons/Menu';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import { Copyright, mainListItems, secondaryListItems } from './function';
+import { Copyright, Title } from './function';
 import { Auth } from "aws-amplify";
-import ConstructionImage from './img/under-construction.png'
-import ToolbarImage from './img/toolbar-logo.png'
+import Backdrop from '@material-ui/core/Backdrop'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import { TextField } from '@material-ui/core';
+import SendIcon from '@material-ui/icons/Send'
+import Button from '@material-ui/core/Button';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
 const drawerWidth = 240;
 
@@ -73,6 +83,9 @@ const useStyles = makeStyles((theme) => ({
   menuButtonHidden: {
     display: 'none',
   },
+  sendButton: {
+    margin: theme.spacing(1),
+  },
   title: {
     flexGrow: 1,
   },
@@ -112,38 +125,65 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'auto',
     flexDirection: 'column',
   },
-  construction: {
-    backgroundImage: `url(${ConstructionImage})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundColor: 'transparent',
-    backgroundPosition: 'center',
-    height: 512
+  fixedHeight: {
+    height: 360,
+  },
+  title: {
+    flexGrow: 1,
+  },
+  paperTitle: {
+    textAlign: 'left'
   }
 }));
 
 export default function Dashboard(props) {
   const classes = useStyles();
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  
+  function createData(id, date, name, shipTo, paymentMethod, amount) {
+    return { id, date, name, shipTo, paymentMethod, amount };
+  }
+  
+  const rows = [
+    createData(0, '16 Mar, 2019', 'Elvis Presley', 'Tupelo, MS', 'VISA ⠀•••• 3719', 312.44),
+    createData(1, '16 Mar, 2019', 'Paul McCartney', 'London, UK', 'VISA ⠀•••• 2574', 866.99),
+    createData(2, '16 Mar, 2019', 'Tom Scholz', 'Boston, MA', 'MC ⠀•••• 1253', 100.81),
+    createData(3, '16 Mar, 2019', 'Michael Jackson', 'Gary, IN', 'AMEX ⠀•••• 2000', 654.39),
+    createData(4, '15 Mar, 2019', 'Bruce Springsteen', 'Long Branch, NJ', 'VISA ⠀•••• 5919', 212.79),
+  ];
+
   const handleDrawerOpen = () => {
     setOpen(true);
   };
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const constructionPaper = clsx(classes.paper, classes.construction);
+  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   async function signOut() {
     try {
+      setLoading(true);
       await Auth.signOut();
       props.onStateChange("signedOut", {});
     } catch (err) {
+      setLoading(false);
       console.log('error signing out: ', err)
     }
+    setLoading(false)
+  }
+
+  function showLoading() {
+    return (
+      <Backdrop className={classes.backdrop} open={loading}>
+        <CircularProgress color="inherit" />
+      </Backdrop>)
   }
 
   if (props.authState === "signedIn") {
     return (
       <div className={classes.root}>
+        {loading && showLoading()}
         <CssBaseline />
         <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
           <Toolbar className={classes.toolbar}>
@@ -157,18 +197,12 @@ export default function Dashboard(props) {
               <MenuIcon />
             </IconButton>
             <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-              {/* <img src={ToolbarImage} alt="logo" /> */}
               LISTENER&trade; DASH
             </Typography>
             <IconButton 
               color="inherit"
               onClick={signOut}>
-              <VpnKeyIcon />
-            </IconButton>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
+              <ExitToAppIcon />
             </IconButton>
           </Toolbar>
         </AppBar>
@@ -185,20 +219,53 @@ export default function Dashboard(props) {
             </IconButton>
           </div>
           <Divider />
-          <List>{mainListItems}</List>
-          <Divider />
-          <List>{secondaryListItems}</List>
+          <List>
+          <ListItem button>
+        <ListItemIcon>
+          <CodeIcon />
+        </ListItemIcon>
+        <ListItemText primary="Content Scoring" />
+      </ListItem></List>
         </Drawer>
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           <Container maxWidth="lg" className={classes.container}>
             <Grid container spacing={3}>
               {/* Chart */}
-              <Grid item xs={12}>
-                <Paper className={constructionPaper} elevation={0} />
-                <Typography component="h1" variant="h6" color="inherit">
-                  UNDER CONSTRUCTION
-                </Typography>
+              <Grid item container xs={12} md={3}>
+                <Paper className={fixedHeightPaper}>
+                  <TextField label="Enter an article ID" variant="filled" />
+                  <Button variant="contained" color="secondary" className={classes.sendButton}>Score</Button>
+                  <Divider />
+                  <Title className={classes.paperTitle}>Scoring Result</Title>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={9}>
+                <Paper className={fixedHeightPaper}>
+                <Title className={classes.paperTitle}>Recent Articles</Title>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Date</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Ship To</TableCell>
+            <TableCell>Payment Method</TableCell>
+            <TableCell align="right">Sale Amount</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>{row.date}</TableCell>
+              <TableCell>{row.name}</TableCell>
+              <TableCell>{row.shipTo}</TableCell>
+              <TableCell>{row.paymentMethod}</TableCell>
+              <TableCell align="right">{row.amount}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+                </Paper>              
               </Grid>
             </Grid>
             <Box pt={4}>

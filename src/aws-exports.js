@@ -1,3 +1,5 @@
+import { Auth } from "aws-amplify";
+
 const AmplifyConfig = {
     cognito: {
         REGION: "us-east-1",
@@ -14,5 +16,16 @@ export default {
         userPoolId: AmplifyConfig.cognito.USER_POOL_ID,
         identityPoolId: AmplifyConfig.cognito.IDENTITY_POOL_ID,
         userPoolWebClientId: AmplifyConfig.cognito.APP_CLIENT_ID
+    },
+    API: {
+        endpoints: [
+            {
+                name: "DashboardAPI",
+                endpoint: "https://parmmbme9j.execute-api.us-east-1.amazonaws.com",
+                custom_header: async () => {
+                    return { Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}` }
+                }
+            }
+        ]
     }
 };
