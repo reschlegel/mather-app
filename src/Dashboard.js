@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -27,11 +27,20 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import { TextField } from '@material-ui/core';
 import SendIcon from '@material-ui/icons/Send'
 import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import MaterialTable from 'material-table'
+import ArrowDownward from '@material-ui/icons/ArrowDownward';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Search from '@material-ui/icons/Search';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import Avatar from '@material-ui/core/Avatar'
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
 
 const drawerWidth = 240;
 
@@ -50,7 +59,19 @@ const toolbarRelativeProperties = (property, modifier = value => value) => theme
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
-    height: toolbarRelativeProperties('height', value => `calc(100% - ${value}px)`)(theme),
+    // height: toolbarRelativeProperties('height', value => `calc(100% - ${value}px)`)(theme),
+  },
+  premiumNo: {
+    margin: theme.spacing(1),
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+    backgroundColor: theme.palette.error.main,
+  },
+  premiumYes: {
+    margin: theme.spacing(1),
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+    backgroundColor: theme.palette.success.main,
   },
   toolbar: {
     paddingRight: 24, // keep right padding when drawer closed
@@ -133,6 +154,14 @@ const useStyles = makeStyles((theme) => ({
   },
   paperTitle: {
     textAlign: 'left'
+  },
+  tableHeader: {
+    backgroundColor: theme.palette.secondary.main,
+  },
+  card: {
+    display: 'flex',
+    height: '100%',
+    flexGrow: '1',
   }
 }));
 
@@ -140,24 +169,27 @@ export default function Dashboard(props) {
   const classes = useStyles();
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
-  
-  function createData(id, date, name, shipTo, paymentMethod, amount) {
-    return { id, date, name, shipTo, paymentMethod, amount };
-  }
-  
-  const rows = [
-    createData(0, '16 Mar, 2019', 'Elvis Presley', 'Tupelo, MS', 'VISA ⠀•••• 3719', 312.44),
-    createData(1, '16 Mar, 2019', 'Paul McCartney', 'London, UK', 'VISA ⠀•••• 2574', 866.99),
-    createData(2, '16 Mar, 2019', 'Tom Scholz', 'Boston, MA', 'MC ⠀•••• 1253', 100.81),
-    createData(3, '16 Mar, 2019', 'Michael Jackson', 'Gary, IN', 'AMEX ⠀•••• 2000', 654.39),
-    createData(4, '15 Mar, 2019', 'Bruce Springsteen', 'Long Branch, NJ', 'VISA ⠀•••• 5919', 212.79),
-  ];
+  const [details, setDetails] = useState(false);
 
+  const tableIcons = {
+    Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+    FirstPage: forwardRef((props, ref) => <FirstPage {...props} ref={ref} />),
+    LastPage: forwardRef((props, ref) => <LastPage {...props} ref={ref} />),
+    NextPage: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+    PreviousPage: forwardRef((props, ref) => <ChevronLeft {...props} ref={ref} />),
+    ResetSearch: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+    Search: forwardRef((props, ref) => <Search {...props} ref={ref} />),
+    SortArrow: forwardRef((props, ref) => <ArrowDownward {...props} ref={ref} />),
+  };
+  
   const handleDrawerOpen = () => {
     setOpen(true);
   };
   const handleDrawerClose = () => {
     setOpen(false);
+  };
+  const handleDetails = () => {
+    setDetails(!details);
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
@@ -178,6 +210,18 @@ export default function Dashboard(props) {
       <Backdrop className={classes.backdrop} open={loading}>
         <CircularProgress color="inherit" />
       </Backdrop>)
+  }
+
+  function premiumIconRender(rowData) {
+    if (rowData.premium) {
+      return (
+        <Avatar className={classes.premiumNo}><LockOutlinedIcon fontSize="small"/></Avatar>
+      )
+    } else {
+      return (
+        <Avatar className={classes.premiumYes}><MonetizationOnIcon fontSize="small"/></Avatar>
+      )
+    }
   }
 
   if (props.authState === "signedIn") {
@@ -220,7 +264,7 @@ export default function Dashboard(props) {
           </div>
           <Divider />
           <List>
-          <ListItem button>
+          <ListItem button selected={true}>
         <ListItemIcon>
           <CodeIcon />
         </ListItemIcon>
@@ -230,44 +274,88 @@ export default function Dashboard(props) {
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           <Container maxWidth="lg" className={classes.container}>
-            <Grid container spacing={3}>
-              {/* Chart */}
+            {!details ? (<Grid container spacing={3}>
               <Grid item container xs={12} md={3}>
-                <Paper className={fixedHeightPaper}>
+                <Paper className={classes.paper}>
                   <TextField label="Enter an article ID" variant="filled" />
-                  <Button variant="contained" color="secondary" className={classes.sendButton}>Score</Button>
+                  <Typography className={classes.title} color="primary" gutterBottom variant="h5">
+                        ID 
+                      </Typography>
+                      <Typography className={classes.title} color="primary" gutterBottom variant="h5">
+                        DD-MM-YYYY 
+                      </Typography>
+                      <Typography className={classes.title} color="primary" gutterBottom variant="h5">
+                        Other Stats 
+                      </Typography>
                   <Divider />
-                  <Title className={classes.paperTitle}>Scoring Result</Title>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={9}>
-                <Paper className={fixedHeightPaper}>
-                <Title className={classes.paperTitle}>Recent Articles</Title>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Date</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Ship To</TableCell>
-            <TableCell>Payment Method</TableCell>
-            <TableCell align="right">Sale Amount</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.name}</TableCell>
-              <TableCell>{row.shipTo}</TableCell>
-              <TableCell>{row.paymentMethod}</TableCell>
-              <TableCell align="right">{row.amount}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-                </Paper>              
+                <MaterialTable
+                  title="Recent Articles"
+                  columns={[
+                    { title: 'ID', field: 'id' },
+                    { title: 'Title', field: 'title' },
+                    { title: 'Premium', field: 'premium', render: rowData => premiumIconRender(rowData) },
+                    {
+                      title: 'Birth Place',
+                      field: 'birthCity',
+                      lookup: { 34: 'İstanbul', 63: 'Şanlıurfa' },
+                    },
+                  ]}
+                  data={[
+                    { id: 'Mehmet', title: 'Baran', birthYear: 1987, birthCity: 63, premium: true },
+                    { id: 'Zerya Betül', title: 'Baran', birthYear: 2017, birthCity: 34, premium: false },
+                    { id: 'Mehmet', title: 'Baran', birthYear: 1987, birthCity: 63 },
+                    { id: 'Zerya Betül', title: 'Baran', birthYear: 2017, birthCity: 34 },
+                    { id: 'Mehmet', title: 'Baran', birthYear: 1987, birthCity: 63 },
+                    { id: 'Zerya Betül', title: 'Baran', birthYear: 2017, birthCity: 34 },
+                  ]}        
+                  options={{
+                    search: true,
+                    headerStyle: {
+                      fontWeight: 'bold'
+                    }
+                  }
+                  }
+                  icons={tableIcons}
+                  onRowClick={handleDetails}
+                />
               </Grid>
-            </Grid>
+            </Grid>) : 
+            (<Grid container spacing={3}>
+              <Grid item xs={12} md={1}>
+                  <IconButton onClick={handleDetails}>
+                    <ChevronLeftIcon />
+                  </IconButton>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card className={classes.card}>
+                    <CardContent>
+                      <Typography className={classes.title} color="primary" gutterBottom variant="h5">
+                        Article 
+                      </Typography>
+                      <Typography variant="h6" component="h2" color="textSecondary">
+                        #863459
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                <Card className={classes.card}>
+                <CardContent>
+                      <Typography className={classes.title} color="primary" gutterBottom variant="h5">
+                        Score
+                      </Typography>
+                      <CardMedia
+                        className={classes.cover}
+                        image="/static/images/cards/live-from-space.jpg"
+                        title="Live from space album cover"
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>)}           
             <Box pt={4}>
               <Copyright />
             </Box>
