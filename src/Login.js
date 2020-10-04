@@ -12,9 +12,8 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import { Copyright } from './function.js';
-import { Auth } from "aws-amplify";
+import { Auth, API } from "aws-amplify";
 import BGImage from './img/bg-image.jpg'
-
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -60,13 +59,28 @@ export default function Login(props) {
   const [inputs, setInputs] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  const apiName = 'DashboardAPI';
+  const path = '/score';
 
   async function signIn() {
     try {
       setLoading(true);
       await Auth.signIn(inputs.username, inputs.password);
+
+      API.get(apiName, path, { queryStringParameters: { action: 'list' } })
+        .then(response => {
+          console.log(response);
+          console.log("response")
+        })
+        .catch(error => {
+          console.log("error");
+          console.log(error);
+        })
+
       props.onStateChange("signedIn", {});
       setLoading(false);
+      console.log((await Auth.currentSession()).getIdToken().getJwtToken());
     } catch (err) {
       if (err.code === "UserNotConfirmedException") {
         props.updateUsername(username);
@@ -80,6 +94,7 @@ export default function Login(props) {
         setError("Login failed.");
       } else {
         setError("An error has occurred.");
+        console.log("Some error here")
         console.error(err);
       }
     }

@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { useState } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import { withStyles } from '@material-ui/core';
@@ -11,9 +11,10 @@ import IconButton from '@material-ui/core/IconButton';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import PostAddIcon from '@material-ui/icons/PostAdd';
 import { Tooltip } from '@material-ui/core'
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Dialog from '@material-ui/core/Dialog';
+import Backdrop from '@material-ui/core/Backdrop'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import MUIDataTable from "mui-datatables";
+import { Auth, API, graphqlOperation } from "aws-amplify";
 
 const styles = theme => ({
     title: {
@@ -48,9 +49,20 @@ function ContentScoring(props) {
    
     const { classes, details, handleDetails } = props;
 
+    const [loading, setLoading] = useState(false);
+    const apiName = 'DashboardAPI';
+    const path = '/score';
+
+    function showLoading() {
+        return (
+          <Backdrop className={classes.backdrop} open={loading}>
+            <CircularProgress color="inherit" />
+          </Backdrop>)
+      }
+
     const AddArticle = () => (
         <Tooltip disableFocusListener title="Add Article">
-            <IconButton onClick={() => alert("clicked")}>
+            <IconButton>
                 <PostAddIcon />
             </IconButton>
         </Tooltip>
@@ -86,13 +98,30 @@ function ContentScoring(props) {
             label: "Risk"
         },
     ];
-       
-    const data = [
-        { id: "Joe James", headline: "Test Corp", premium: true, state: "NY" },
-        { id: "John Walsh", headline: "Test Corp", premium: false, state: "CT" },
-        { id: "Bob Herm", headline: "Test Corp", premium: true, state: "FL" },
-        { id: "James Houston", headline: "Test Corp", premium: false, state: "TX" },
-    ];
+
+    var data = [];
+
+    function () {
+        setLoading(true);
+        API
+            .get(apiName, path, { queryStringParameters: { action: 'list' } })
+            .then(response => {
+                data = response;
+                console.log(response)
+                console.log("After response")
+            })
+            .catch(error => {
+                console.log(error);
+                console.log("ERROR")
+            });
+    }
+
+    // const data = [
+    //     { id: "Joe James", headline: "Test Corp", premium: true, state: "NY" },
+    //     { id: "John Walsh", headline: "Test Corp", premium: false, state: "CT" },
+    //     { id: "Bob Herm", headline: "Test Corp", premium: true, state: "FL" },
+    //     { id: "James Houston", headline: "Test Corp", premium: false, state: "TX" },
+    // ];
        
     const options = {
         selectableRows: "none",
@@ -119,6 +148,7 @@ function ContentScoring(props) {
     } else {
         return (
             <Grid container spacing={3}>
+                 {loading && showLoading()}
                 <Grid item xs={12} md={1}>
                     <IconButton onClick={handleDetails}>
                     <ChevronLeftIcon />

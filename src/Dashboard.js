@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -26,25 +26,12 @@ import ContentScoring from './ContentScoring';
 
 const drawerWidth = 240;
 
-const toolbarRelativeProperties = (property, modifier = value => value) => theme =>
-  Object.keys(theme.mixins.toolbar).reduce((style, key) => {
-    const value = theme.mixins.toolbar[key];
-    if (key === 'minHeight') {
-      return { ...style, [property]: modifier(value) };
-    }
-    if (value.minHeight !== undefined) {
-      return { ...style, [key]: { [property]: modifier(value.minHeight) } };
-    }
-    return style;
-  }, {});
-
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
-    // height: toolbarRelativeProperties('height', value => `calc(100% - ${value}px)`)(theme),
   },
   toolbar: {
-    paddingRight: 24, // keep right padding when drawer closed
+    paddingRight: 24,
   },
   toolbarIcon: {
     display: 'flex',
@@ -138,7 +125,6 @@ export default function Dashboard(props) {
   const handleDetails = () => {
     setDetails(!details);
   };
-  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   async function signOut() {
     try {
@@ -157,9 +143,7 @@ export default function Dashboard(props) {
       <Backdrop className={classes.backdrop} open={loading}>
         <CircularProgress color="inherit" />
       </Backdrop>)
-  }
-
-  
+  } 
 
   if (props.authState === "signedIn") {
     return (

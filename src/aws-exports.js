@@ -3,9 +3,9 @@ import { Auth } from "aws-amplify";
 const AmplifyConfig = {
     cognito: {
         REGION: "us-east-1",
-        USER_POOL_ID: "us-east-1_IRRWRqrOz",
-        APP_CLIENT_ID: "17idv4e1g9n6s5sqvrtuupfrs1",
-        IDENTITY_POOL_ID: "us-east-1:ff879d9f-9ce1-485d-ae15-a300dc7aadac"
+        USER_POOL_ID: "us-east-1_ESlFh5ge4",
+        APP_CLIENT_ID: "6lr8bvls9r2ek6tga96hfik4n2",
+        IDENTITY_POOL_ID: "us-east-1:5f6b8726-2d70-41eb-ba6f-b71d36bccb2a"
     }    
 }
 
@@ -21,7 +21,7 @@ export default {
         endpoints: [
             {
                 name: "DashboardAPI",
-                endpoint: "https://parmmbme9j.execute-api.us-east-1.amazonaws.com",
+                endpoint: "https://fkmqixk070.execute-api.us-east-1.amazonaws.com/v1",
                 custom_header: async () => {
                     return { Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}` }
                 }
