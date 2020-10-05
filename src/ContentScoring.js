@@ -1,25 +1,19 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import { withStyles } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid';
 import Avatar from '@material-ui/core/Avatar'
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
+import LockOpenOutlinedIcon from '@material-ui/icons/LockOpenOutlined';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import PostAddIcon from '@material-ui/icons/PostAdd';
 import { Tooltip } from '@material-ui/core'
-import Backdrop from '@material-ui/core/Backdrop'
-import CircularProgress from '@material-ui/core/CircularProgress'
 import MUIDataTable from "mui-datatables";
-import { Auth, API, graphqlOperation } from "aws-amplify";
 
 const styles = theme => ({
-    title: {
-        flexGrow: '1'
-    },
     paper: {
         padding: theme.spacing(2),
         display: 'flex',
@@ -35,34 +29,26 @@ const styles = theme => ({
         margin: theme.spacing(1),
         width: theme.spacing(3),
         height: theme.spacing(3),
-        backgroundColor: theme.palette.error.main,
+        backgroundColor: theme.palette.success.main,
     },
     premiumYes: {
         margin: theme.spacing(1),
         width: theme.spacing(3),
         height: theme.spacing(3),
-        backgroundColor: theme.palette.success.main,
+        backgroundColor: theme.palette.secondary.main,
     },
 });
 
 function ContentScoring(props) {
    
-    const { classes, details, handleDetails } = props;
+    const { classes, table } = props;
 
-    const [loading, setLoading] = useState(false);
-    const apiName = 'DashboardAPI';
-    const path = '/score';
-
-    function showLoading() {
-        return (
-          <Backdrop className={classes.backdrop} open={loading}>
-            <CircularProgress color="inherit" />
-          </Backdrop>)
-      }
+    const [searchText, setSearchText] = useState("");
+    const [details, setDetails] = useState(false);
 
     const AddArticle = () => (
         <Tooltip disableFocusListener title="Add Article">
-            <IconButton>
+            <IconButton onClick={async () => props.scoreArticle(searchText)}>
                 <PostAddIcon />
             </IconButton>
         </Tooltip>
@@ -77,62 +63,74 @@ function ContentScoring(props) {
             }
         },
         {
-            name: "headline",
-            label: "Headline",
+            name: "title",
+            label: "Title",
+            options: {
+                sortThirdClickReset: true
+            }
         },
         {
-            name: "premium",
+            name: "author",
+            label: "Author",
+            options: {
+                sortThirdClickReset: true
+            }
+        },
+        {
+            name: "sec",
+            label: "Section",
+            options: {
+                sortThirdClickReset: true
+            }
+        },
+        {
+            name: "prem",
             label: "Premium",
             options: {
                 customBodyRender: (value, tableMeta, updateValue) => {
                     if (value) {
                         return (<Avatar className={classes.premiumNo}><LockOutlinedIcon fontSize="small" /></Avatar>)
                  } else {
-                     return (<Avatar className={classes.premiumYes}><MonetizationOnIcon fontSize="small" /></Avatar>)
+                     return (<Avatar className={classes.premiumYes}><LockOpenOutlinedIcon fontSize="small" /></Avatar>)
                     }
                 },
+                sortThirdClickReset: true
             }
         },
         {
             name: "risk",
-            label: "Risk"
+            label: "Risk",
+            options: {
+                sortThirdClickReset: true
+            }
         },
     ];
-
-    var data = [];
-
-    function () {
-        setLoading(true);
-        API
-            .get(apiName, path, { queryStringParameters: { action: 'list' } })
-            .then(response => {
-                data = response;
-                console.log(response)
-                console.log("After response")
-            })
-            .catch(error => {
-                console.log(error);
-                console.log("ERROR")
-            });
-    }
-
-    // const data = [
-    //     { id: "Joe James", headline: "Test Corp", premium: true, state: "NY" },
-    //     { id: "John Walsh", headline: "Test Corp", premium: false, state: "CT" },
-    //     { id: "Bob Herm", headline: "Test Corp", premium: true, state: "FL" },
-    //     { id: "James Houston", headline: "Test Corp", premium: false, state: "TX" },
-    // ];
        
     const options = {
         selectableRows: "none",
         print: false,
-        onRowClick: () => {
-            handleDetails()
+        onRowClick: async (rowData, rowMeta) => {
+            setDetails(true);
+            await props.getArticleDetails(rowData[0]);
         },
         customToolbar: AddArticle,
         download: false,
         filter: false,
-        viewColumns: false
+        viewColumns: false,
+        searchText: searchText,
+        customSearch: (searchQuery, currentRow, columns) => {
+            setSearchText(searchQuery);
+            
+            let isFound = false;
+
+            currentRow.forEach(col => {
+                if (col.toString().toLowerCase().indexOf(searchQuery.toLowerCase()) >= 0) {
+                    isFound = true;
+                }
+            });
+
+            return isFound;
+        }
 
     };
 
@@ -140,7 +138,7 @@ function ContentScoring(props) {
         return (
             <MUIDataTable
                 title={"Article Scoring"}
-                data={data}
+                data={table}
                 columns={columns}
                 options={options}
             />
@@ -148,29 +146,142 @@ function ContentScoring(props) {
     } else {
         return (
             <Grid container spacing={3}>
-                 {loading && showLoading()}
                 <Grid item xs={12} md={1}>
-                    <IconButton onClick={handleDetails}>
+                    <IconButton onClick={ () => {
+                        setSearchText('');
+                        setDetails(false);                        
+                    }}>
                     <ChevronLeftIcon />
                     </IconButton>
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                     <Card className={classes.card}>
                     <CardContent>
-                        <Typography className={classes.title} color="primary" gutterBottom variant="h5">
-                        Article 
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Article ID
                         </Typography>
-                        <Typography variant="h6" component="h2" color="textSecondary">
-                        #863459
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.id}
                         </Typography>
                     </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={12} md={4}>
-                <Card className={classes.card}>
-                <CardContent>
-                        <Typography className={classes.title} color="primary" gutterBottom variant="h5">
-                        Score
+                <Grid item xs={12} md={3}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Title
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.title}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Author
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.author}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Premium
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.prem ? "Premium": "Not Premium"}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Section
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.sec}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Sub Section
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.subsec}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Publish Date
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.pubDate}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Source
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.source}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Page Type
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.pageType}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Article Type
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.artType}
+                        </Typography>
+                    </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12}>
+                    <Card className={classes.card}>
+                    <CardContent>
+                        <Typography align="left" color="primary" gutterBottom variant="h5">
+                        Text
+                        </Typography>
+                        <Typography align="left" variant="h6" component="h2" color="textSecondary">
+                        {props.detailInfo.text}
                         </Typography>
                     </CardContent>
                     </Card>

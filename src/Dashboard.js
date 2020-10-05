@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -19,9 +19,6 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { Copyright } from './function';
-import { Auth } from "aws-amplify";
-import Backdrop from '@material-ui/core/Backdrop'
-import CircularProgress from '@material-ui/core/CircularProgress'
 import ContentScoring from './ContentScoring';
 
 const drawerWidth = 240;
@@ -112,9 +109,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Dashboard(props) {
   const classes = useStyles();
-  const [open, setOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [details, setDetails] = useState(false);
+  const [open, setOpen] = useState(false);
+  // const [details, setDetails] = useState(false);
   
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -122,33 +118,18 @@ export default function Dashboard(props) {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const handleDetails = () => {
-    setDetails(!details);
-  };
+  // const handleDetails = () => {
+  //   setDetails(!details);
+  // };
 
-  async function signOut() {
-    try {
-      setLoading(true);
-      await Auth.signOut();
-      props.onStateChange("signedOut", {});
-    } catch (err) {
-      setLoading(false);
-      console.log('error signing out: ', err)
-    }
-    setLoading(false)
-  }
-
-  function showLoading() {
-    return (
-      <Backdrop className={classes.backdrop} open={loading}>
-        <CircularProgress color="inherit" />
-      </Backdrop>)
-  } 
+  useEffect( () => {
+    props.getTableData();
+  }, [props.authState])
 
   if (props.authState === "signedIn") {
+
     return (
       <div className={classes.root}>
-        {loading && showLoading()}
         <CssBaseline />
         <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
           <Toolbar className={classes.toolbar}>
@@ -166,7 +147,7 @@ export default function Dashboard(props) {
             </Typography>
             <IconButton 
               color="inherit"
-              onClick={signOut}>
+              onClick={props.signOut}>
               <ExitToAppIcon />
             </IconButton>
           </Toolbar>
@@ -195,7 +176,7 @@ export default function Dashboard(props) {
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
           <Container maxWidth="xl" className={classes.container}>
-            <ContentScoring details={details} handleDetails={handleDetails} />
+            <ContentScoring table={props.table} scoreArticle={props.scoreArticle} detailInfo={props.detailInfo} getArticleDetails={props.getArticleDetails}/>
             <Box pt={4}>
               <Copyright />
             </Box>

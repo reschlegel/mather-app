@@ -3,8 +3,8 @@ import { Auth } from "aws-amplify";
 const AmplifyConfig = {
     cognito: {
         REGION: "us-east-1",
-        USER_POOL_ID: "us-east-1_ESlFh5ge4",
-        APP_CLIENT_ID: "6lr8bvls9r2ek6tga96hfik4n2",
+        USER_POOL_ID: "us-east-1_VNN49UqUz",
+        APP_CLIENT_ID: "7lncvd200pan6geidqe9vauek9",
         IDENTITY_POOL_ID: "us-east-1:5f6b8726-2d70-41eb-ba6f-b71d36bccb2a"
     }    
 }
