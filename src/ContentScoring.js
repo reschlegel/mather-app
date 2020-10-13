@@ -63,6 +63,20 @@ function ContentScoring(props) {
             }
         },
         {
+            name: "prem",
+            label: "Premium",
+            options: {
+                customBodyRender: (value, tableMeta, updateValue) => {
+                    if (value) {
+                        return (<Avatar className={classes.premiumNo}><LockOutlinedIcon fontSize="small" /></Avatar>)
+                 } else {
+                     return (<Avatar className={classes.premiumYes}><LockOpenOutlinedIcon fontSize="small" /></Avatar>)
+                    }
+                },
+                sortThirdClickReset: true
+            }
+        },
+        {
             name: "title",
             label: "Title",
             options: {
@@ -80,20 +94,6 @@ function ContentScoring(props) {
             name: "sec",
             label: "Section",
             options: {
-                sortThirdClickReset: true
-            }
-        },
-        {
-            name: "prem",
-            label: "Premium",
-            options: {
-                customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value) {
-                        return (<Avatar className={classes.premiumNo}><LockOutlinedIcon fontSize="small" /></Avatar>)
-                 } else {
-                     return (<Avatar className={classes.premiumYes}><LockOpenOutlinedIcon fontSize="small" /></Avatar>)
-                    }
-                },
                 sortThirdClickReset: true
             }
         },
