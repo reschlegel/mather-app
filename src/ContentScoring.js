@@ -124,8 +124,6 @@ function ContentScoring(props) {
         },
         onSearchChange: (searchQuery) => {
             setSearchText(searchQuery);
-            console.log(searchQuery);
-            console.log(searchText);
         }
 
     };

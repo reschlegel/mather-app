@@ -127,21 +127,13 @@ class AuthWrapper extends Component {
 
       let isFound = false;
 
-      console.log(isFound);
-      console.log(id);
-
       this.state.table.forEach(item => {
-        console.log(item);
           if (item.id === id) {
               isFound = true;
           }
       });
 
-      console.log(isFound);
-      console.log(id);
-
       if (!isFound && id !== null && id !== '') {
-        console.log("Scoring");
         //if it doesn't show up in the first 100 articles, get it and add to list TODO
         await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id } })
           .then(response => {
