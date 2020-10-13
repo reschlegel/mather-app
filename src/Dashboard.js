@@ -143,7 +143,7 @@ export default function Dashboard(props) {
               <MenuIcon />
             </IconButton>
             <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-              LISTENER&trade; DASH
+              LISTENER&trade; - Premium Content Scoring
             </Typography>
             <IconButton 
               color="inherit"
