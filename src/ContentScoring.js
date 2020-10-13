@@ -97,13 +97,6 @@ function ContentScoring(props) {
                 sortThirdClickReset: true
             }
         },
-        {
-            name: "risk",
-            label: "Risk",
-            options: {
-                sortThirdClickReset: true
-            }
-        },
     ];
        
     const options = {
@@ -119,8 +112,6 @@ function ContentScoring(props) {
         viewColumns: false,
         searchText: searchText,
         customSearch: (searchQuery, currentRow, columns) => {
-            setSearchText(searchQuery);
-            
             let isFound = false;
 
             currentRow.forEach(col => {
@@ -130,6 +121,11 @@ function ContentScoring(props) {
             });
 
             return isFound;
+        },
+        onSearchChange: (searchQuery) => {
+            setSearchText(searchQuery);
+            console.log(searchQuery);
+            console.log(searchText);
         }
 
     };

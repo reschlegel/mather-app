@@ -3,8 +3,8 @@ import Dashboard from "./Dashboard";
 import Login from "./Login";
 import { withStyles } from "@material-ui/core/styles"
 import Backdrop from '@material-ui/core/Backdrop'
-import CircularProgress from '@material-ui/core/CircularProgress'
 import { Auth, API } from "aws-amplify";
+import { Typography, CircularProgress } from "@material-ui/core";
 
 const styles = theme => ({
   backdrop: {
@@ -21,12 +21,14 @@ class AuthWrapper extends Component {
       table: [],
       detailInfo: {},
       loading: false,
+      scoring: false,
       error: ""
     };
     this.updateUsername = this.updateUsername.bind(this);
     this.updateTable = this.updateTable.bind(this);
     this.updateDetails = this.updateDetails.bind(this);
     this.updateLoading = this.updateLoading.bind(this);
+    this.updateScoring = this.updateScoring.bind(this);
     this.updateError = this.updateError.bind(this);
     this.signIn = this.signIn.bind(this);
     this.signOut = this.signOut.bind(this);
@@ -57,11 +59,15 @@ class AuthWrapper extends Component {
     this.setState({ loading: newLoading });
   };
 
+  updateScoring(newScoring) {
+    this.setState({ scoring: newScoring });
+  };
+
   async signIn(username, password) {
     try {
       this.updateLoading(true);
       await Auth.signIn(username, password);
-      console.log((await Auth.currentSession()).getIdToken().getJwtToken());
+      // console.log((await Auth.currentSession()).getIdToken().getJwtToken());
     } catch (err) {
       if (err.code === "UserNotConfirmedException") {
         this.updateUsername(username);
@@ -117,21 +123,29 @@ class AuthWrapper extends Component {
 
   async scoreArticle(id) {
     try {
-      this.updateLoading(true);
+      this.updateScoring(true);
 
       let isFound = false;
 
+      console.log(isFound);
+      console.log(id);
+
       this.state.table.forEach(item => {
+        console.log(item);
           if (item.id === id) {
               isFound = true;
           }
       });
 
+      console.log(isFound);
+      console.log(id);
+
       if (!isFound && id !== null && id !== '') {
+        console.log("Scoring");
         //if it doesn't show up in the first 100 articles, get it and add to list TODO
         await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id } })
           .then(response => {
-            console.log(response);
+            // console.log(response);
           })
           .catch(error => {
             console.log(error);
@@ -139,7 +153,7 @@ class AuthWrapper extends Component {
       
         await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id, 'action': 'missing' }, headers: { 'InvocationType': 'Event' } })
           .then(response => {
-            console.log(response);
+            // console.log(response);
           })
           .catch(error => {
             console.log(error);
@@ -170,7 +184,7 @@ class AuthWrapper extends Component {
       console.log(err);
     };
       
-    this.updateLoading(false);
+    this.updateScoring(false);
   };
 
   async getArticleDetails(id) {
@@ -193,18 +207,21 @@ class AuthWrapper extends Component {
 
   render() {
     const loading = this.state.loading;
+    const scoring = this.state.scoring;
 
-    let loadWheel;
+    let load;
 
     if (loading) {
-      loadWheel = <Backdrop className={this.props.classes.backdrop} open={this.state.loading}><CircularProgress color="inherit" /></Backdrop>;
+      load = <Backdrop className={this.props.classes.backdrop} open={this.state.loading}><CircularProgress color="inherit" /></Backdrop>;
+    } else if (scoring) {
+      load = <Backdrop className={this.props.classes.backdrop} open={this.state.scoring}><Typography variant="h2">Scoring article, please wait...</Typography><CircularProgress color="inherit" /></Backdrop>;
     } else {
-      loadWheel = <div></div>;
+      load = <div></div>;
     };
 
     return (
       <div className="flex-1">
-        {loadWheel}
+        {load}
         <Login
           authState={this.props.authState}
           updateUsername={this.updateUsername}
