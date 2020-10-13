@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -10,16 +10,16 @@ import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
-import Badge from '@material-ui/core/Badge';
 import Container from '@material-ui/core/Container';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
+import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import CodeIcon from "@material-ui/icons/Code";
+import ListItemText from '@material-ui/core/ListItemText'
 import MenuIcon from '@material-ui/icons/Menu';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import { Copyright, mainListItems, secondaryListItems } from './function';
-import { Auth } from "aws-amplify";
+import { Copyright } from './function';
+import ContentScoring from './ContentScoring';
 
 const drawerWidth = 240;
 
@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
   },
   toolbar: {
-    paddingRight: 24, // keep right padding when drawer closed
+    paddingRight: 24,
   },
   toolbarIcon: {
     display: 'flex',
@@ -58,8 +58,8 @@ const useStyles = makeStyles((theme) => ({
   menuButtonHidden: {
     display: 'none',
   },
-  title: {
-    flexGrow: 1,
+  sendButton: {
+    margin: theme.spacing(1),
   },
   drawerPaper: {
     position: 'relative',
@@ -91,38 +91,43 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
   },
-  paper: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    overflow: 'auto',
-    flexDirection: 'column',
-  },
+
   fixedHeight: {
-    height: 240,
+    height: 360,
   },
+  title: {
+    flexGrow: 1,
+  },
+  paperTitle: {
+    textAlign: 'left'
+  },
+  tableHeader: {
+    backgroundColor: theme.palette.secondary.main,
+  },
+
 }));
 
 export default function Dashboard(props) {
   const classes = useStyles();
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = useState(false);
+  // const [details, setDetails] = useState(false);
+  
   const handleDrawerOpen = () => {
     setOpen(true);
   };
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+  // const handleDetails = () => {
+  //   setDetails(!details);
+  // };
 
-  async function signOut() {
-    try {
-      await Auth.signOut();
-      props.onStateChange("signedOut", {});
-    } catch (err) {
-      console.log('error signing out: ', err)
-    }
-  }
+  useEffect( () => {
+    props.getTableData();
+  }, [props.authState])
 
   if (props.authState === "signedIn") {
+
     return (
       <div className={classes.root}>
         <CssBaseline />
@@ -138,17 +143,12 @@ export default function Dashboard(props) {
               <MenuIcon />
             </IconButton>
             <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-              Dashboard
+              LISTENER&trade; DASH
             </Typography>
             <IconButton 
               color="inherit"
-              onClick={signOut}>
-              <VpnKeyIcon />
-            </IconButton>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
+              onClick={props.signOut}>
+              <ExitToAppIcon />
             </IconButton>
           </Toolbar>
         </AppBar>
@@ -165,41 +165,25 @@ export default function Dashboard(props) {
             </IconButton>
           </div>
           <Divider />
-          <List>{mainListItems}</List>
-          <Divider />
-          <List>{secondaryListItems}</List>
+          <List>
+          <ListItem button selected={true}>
+        <ListItemIcon>
+          <CodeIcon />
+        </ListItemIcon>
+        <ListItemText primary="Content Scoring" />
+      </ListItem></List>
         </Drawer>
         <main className={classes.content}>
           <div className={classes.appBarSpacer} />
-          <Container maxWidth="lg" className={classes.container}>
-            <Grid container spacing={3}>
-              {/* Chart */}
-              <Grid item xs={12} md={8} lg={9}>
-                <Paper className={fixedHeightPaper}>
-                  {/* <Chart /> */}
-                </Paper>
-              </Grid>
-              {/* Recent Deposits */}
-              <Grid item xs={12} md={4} lg={3}>
-                <Paper className={fixedHeightPaper}>
-                  {/* <Deposits /> */}
-                </Paper>
-              </Grid>
-              {/* Recent Orders */}
-              <Grid item xs={12}>
-                <Paper className={classes.paper}>
-                  {/* <Orders /> */}
-                </Paper>
-              </Grid>
-            </Grid>
+          <Container maxWidth="xl" className={classes.container}>
+            <ContentScoring table={props.table} scoreArticle={props.scoreArticle} detailInfo={props.detailInfo} getArticleDetails={props.getArticleDetails}/>
             <Box pt={4}>
               <Copyright />
             </Box>
           </Container>
         </main>
       </div>
-    );
-        } else {
+    )} else {
           return null;
         }
 }

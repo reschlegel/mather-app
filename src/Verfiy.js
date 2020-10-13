@@ -6,10 +6,13 @@ import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
+import Backdrop from '@material-ui/core/Backdrop'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import { Copyright } from './function.js';
+import { Auth, API } from "aws-amplify";
 import BGImage from './img/bg-image.jpg'
 
 const useStyles = makeStyles((theme) => ({
@@ -52,8 +55,57 @@ export default function Login(props) {
 
   const _validAuthStates = ["signIn", "signedOut"];
 
+  const [username, setUsername] = useState("");
   const [inputs, setInputs] = useState({});
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const apiName = 'DashboardAPI';
+  const path = '/score';
+
+  async function signIn() {
+    try {
+      setLoading(true);
+      await Auth.signIn(inputs.username, inputs.password);
+
+      API.get(apiName, path, { queryStringParameters: { action: 'list' } })
+        .then(response => {
+          console.log(response);
+          console.log("response")
+        })
+        .catch(error => {
+          console.log("error");
+          console.log(error);
+        })
+
+      props.onStateChange("signedIn", {});
+      setLoading(false);
+      console.log((await Auth.currentSession()).getIdToken().getJwtToken());
+    } catch (err) {
+      if (err.code === "UserNotConfirmedException") {
+        props.updateUsername(username);
+        await Auth.resendSignUp(username);
+        props.onStateChange("confirmSignUp", {});
+      } else if (err.code === "NotAuthorizedException") {
+        // The error happens when the incorrect password is provided
+        setError("Login failed." );
+      } else if (err.code === "UserNotFoundException") {
+        // The error happens when the supplied username/email does not exist in the Cognito user pool
+        setError("Login failed.");
+      } else {
+        setError("An error has occurred.");
+        console.log("Some error here")
+        console.error(err);
+      }
+    }
+  }
+
+  function showLoading() {
+    return (
+      <Backdrop className={classes.backdrop} open={loading}>
+        <CircularProgress color="inherit" />
+      </Backdrop>)
+  }
 
   function handleInputChange(evt) {
     setInputs(inputs || {});
@@ -66,11 +118,12 @@ export default function Login(props) {
 
   function handleFormSubmission(evt) {
     evt.preventDefault();
-    props.signIn(inputs.username, inputs.password);
+    signIn();
   }
   if (_validAuthStates.includes(props.authState)) {
     return (
       <Grid container component="main" className={classes.root}>
+        {loading && showLoading()}
           <CssBaseline />
           <Grid item xs={false} sm={4} md={7} className={classes.image} />
           <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
@@ -88,7 +141,7 @@ export default function Login(props) {
                   required
                   fullWidth
                   id="username"
-                  label="Email"
+                  label="Username"
                   name="username"
                   autoComplete="username"
                   autoFocus
