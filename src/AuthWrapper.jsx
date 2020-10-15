@@ -22,6 +22,7 @@ class AuthWrapper extends Component {
       detailInfo: {},
       loading: false,
       scoring: false,
+      scoreError: false,
       error: ""
     };
     this.updateUsername = this.updateUsername.bind(this);
@@ -29,6 +30,7 @@ class AuthWrapper extends Component {
     this.updateDetails = this.updateDetails.bind(this);
     this.updateLoading = this.updateLoading.bind(this);
     this.updateScoring = this.updateScoring.bind(this);
+    this.updateScoreError = this.updateScoreError.bind(this);
     this.updateError = this.updateError.bind(this);
     this.signIn = this.signIn.bind(this);
     this.signOut = this.signOut.bind(this);
@@ -53,6 +55,10 @@ class AuthWrapper extends Component {
 
   updateError(newError) {
     this.setState({ error: newError });
+  };
+
+  updateScoreError(newScoreError) {
+    this.setState({ scoreError: newScoreError })
   };
 
   updateLoading(newLoading) {
@@ -119,7 +125,7 @@ class AuthWrapper extends Component {
 
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  };
 
   async scoreArticle(id) {
     try {
@@ -155,17 +161,23 @@ class AuthWrapper extends Component {
 
         await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id, 'action': 'recheck' } })
           .then(response => {
-            const newData = JSON.parse(response['body-json'].body);
-            var newTable = [{
-              author: newData.author,
-              id: newData.id,
-              prem: newData.prem,
-              risk: newData.risk,
-              sec: newData.sec,
-              title: newData.title
-            }].concat(this.state.table)
+            if (response['body-json'].statusCode === 202) {
+              this.updateLoading(false);
+              this.updateScoring(false);
+              this.updateScoreError(true);
+            } else {
+              const newData = JSON.parse(response['body-json'].body);
+              var newTable = [{
+                author: newData.author,
+                id: newData.id,
+                prem: newData.prem,
+                risk: newData.risk,
+                sec: newData.sec,
+                title: newData.title
+              }].concat(this.state.table)
 
-            this.updateTable(newTable);
+              this.updateTable(newTable);
+            }            
           })
           .catch(error => {
             console.log(error);
@@ -200,6 +212,7 @@ class AuthWrapper extends Component {
   render() {
     const loading = this.state.loading;
     const scoring = this.state.scoring;
+    const erroring = this.state.scoreError;
 
     let load;
 
@@ -207,6 +220,8 @@ class AuthWrapper extends Component {
       load = <Backdrop className={this.props.classes.backdrop} open={this.state.loading}><CircularProgress color="inherit" /></Backdrop>;
     } else if (scoring) {
       load = <Backdrop className={this.props.classes.backdrop} open={this.state.scoring}><Typography variant="h2">Scoring article, please wait...</Typography><CircularProgress color="inherit" /></Backdrop>;
+    } else if (erroring) {
+      load = <Backdrop className={this.props.classes.backdrop} open={this.state.scoreError} onClick={() => this.updateScoreError(false)}><Typography variant="h2">Error Scoring Article</Typography></Backdrop>;
     } else {
       load = <div></div>;
     };
