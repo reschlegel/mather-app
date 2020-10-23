@@ -156,15 +156,18 @@ class AuthWrapper extends Component {
           .catch(error => {
             console.log(error);
           });
+        
+        let timeout = 0;
+        let returned = false;
 
-        await this.sleep(60000);
+        while (timeout < 90) {
+          let currentSeconds = new Date().getTime() / 1000
+          await this.sleep(10000);
 
-        await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id, 'action': 'recheck' } })
+          await API.get(this.apiName, this.path, { queryStringParameters: { 'article-id': id, 'action': 'recheck' } })
           .then(response => {
             if (response['body-json'].statusCode === 202) {
-              this.updateLoading(false);
-              this.updateScoring(false);
-              this.updateScoreError(true);
+              console.log("Waiting for scoring...");
             } else {
               const newData = JSON.parse(response['body-json'].body);
               var newTable = [{
@@ -177,12 +180,21 @@ class AuthWrapper extends Component {
               }].concat(this.state.table)
 
               this.updateTable(newTable);
+              returned = true;
             }            
           })
           .catch(error => {
             console.log(error);
           });
-        
+
+          timeout += new Date().getTime() / 1000 - currentSeconds
+        };
+
+        if (!returned) {
+          this.updateLoading(false);
+          this.updateScoring(false);
+          this.updateScoreError(true);
+        }
       }
     } catch (err) {
       console.log(err);
