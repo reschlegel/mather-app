@@ -160,7 +160,7 @@ class AuthWrapper extends Component {
         let timeout = 0;
         let returned = false;
 
-        while (timeout < 90) {
+        while (timeout < 90 && !returned) {
           let currentSeconds = new Date().getTime() / 1000
           await this.sleep(10000);
 
