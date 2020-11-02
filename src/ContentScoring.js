@@ -66,7 +66,6 @@ function ContentScoring(props) {
         {
             name: "prem",
             label: "Premium",
-            filter: true,
             options: {
                 customBodyRender: (value, tableMeta, updateValue) => {
                     if (value) {
@@ -81,7 +80,6 @@ function ContentScoring(props) {
         {
             name: "title",
             label: "Title",
-            filter: true,
             options: {
                 sortThirdClickReset: true
             }
@@ -89,7 +87,6 @@ function ContentScoring(props) {
         {
             name: "author",
             label: "Author",
-            filter: true,
             options: {
                 sortThirdClickReset: true
             }
@@ -97,7 +94,6 @@ function ContentScoring(props) {
         {
             name: "sec",
             label: "Section",
-            filter: true,
             options: {
                 sortThirdClickReset: true
             }
@@ -105,7 +101,6 @@ function ContentScoring(props) {
         {
             name: "scoredAt",
             label: "Scored At",
-            filter: true,
             options: {
                 sortThirdClickReset: true
             }
