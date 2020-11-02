@@ -176,7 +176,8 @@ class AuthWrapper extends Component {
                 prem: newData.prem,
                 risk: newData.risk,
                 sec: newData.sec,
-                title: newData.title
+                title: newData.title,
+                scoredAt: newData.scoredAt
               }].concat(this.state.table)
 
               this.updateTable(newTable);
